@@ -1,4 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="8" fill="#6366f1"/>
-  <path d="M8 10h16M8 16h12M8 22h14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect width="32" height="32" rx="8" fill="url(#bg)"/>
+  <!-- Document shape -->
+  <path d="M9 6h10l6 6v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="white" fill-opacity="0.95"/>
+  <!-- Fold corner -->
+  <path d="M19 6v5a1 1 0 0 0 1 1h5" fill="white" fill-opacity="0.7"/>
+  <path d="M19 6l6 6H20a1 1 0 0 1-1-1V6z" fill="white" fill-opacity="0.55"/>
+  <!-- Text lines -->
+  <rect x="11" y="15" width="8" height="1.5" rx="0.75" fill="#6366f1"/>
+  <rect x="11" y="18" width="10" height="1.5" rx="0.75" fill="#8b5cf6"/>
+  <rect x="11" y="21" width="6" height="1.5" rx="0.75" fill="#a78bfa"/>
+  <!-- Magnifying glass -->
+  <circle cx="20" cy="18" r="4.5" fill="white" fill-opacity="0.9"/>
+  <circle cx="20" cy="18" r="3" fill="#6366f1"/>
+  <path d="M23 21l2.5 2.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
 </svg>

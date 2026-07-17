@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <g transform="translate(512,512)">
+    <g transform="translate(-180,-200)">
+      <!-- 底层页面 -->
+      <rect x="0" y="40" width="280" height="360" rx="28" ry="28" fill="#1a1a1a"/>
+      <!-- 上层页面 -->
+      <rect x="80" y="0" width="280" height="360" rx="28" ry="28" fill="white" stroke="#1a1a1a" stroke-width="24"/>
+      <!-- 文字横线 -->
+      <rect x="124" y="80" width="192" height="18" rx="9" fill="#1a1a1a"/>
+      <rect x="124" y="130" width="156" height="18" rx="9" fill="#1a1a1a"/>
+      <rect x="124" y="180" width="192" height="18" rx="9" fill="#1a1a1a"/>
+      <rect x="124" y="230" width="120" height="18" rx="9" fill="#1a1a1a"/>
+    </g>
+  </g>
+</svg>

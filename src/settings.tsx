@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
 export type Period = "daily" | "weekly" | "monthly";
@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   app_name: "通览",
   period: "weekly",
   work_dir: "",
-  theme: "dark",
+  theme: "light",
   file_pattern: "report_{YYYY}{MM}{DD}.html",
 };
 
@@ -32,7 +32,7 @@ export function periodLabel(period: Period): string {
 
 interface SettingsContextValue {
   settings: AppSettings;
-  updateSettings: (partial: Partial<AppSettings>) => Promise<void>;
+  updateSettings: (partial: Partial<AppSettings>) => Promise<boolean>;
   loading: boolean;
 }
 
@@ -41,6 +41,11 @@ const SettingsContext = createContext<SettingsContextValue | null>(null);
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
+  const settingsRef = useRef(settings);
+
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
   // Load settings from Rust backend on mount
   useEffect(() => {
@@ -49,12 +54,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         const saved = await invoke<AppSettings>("get_settings");
         if (saved) {
           setSettings(saved);
+          // 第一次打开默认浅色：如果有保存的主题用保存的，否则默认 light
+          document.documentElement.dataset.theme = saved.theme || "light";
+        } else {
+          // 无保存配置：默认浅色
+          document.documentElement.dataset.theme = "light";
         }
-        // Apply theme
-        document.documentElement.dataset.theme = saved?.theme || "dark";
       } catch (err) {
         console.warn("Failed to load settings, using defaults:", err);
-        document.documentElement.dataset.theme = "dark";
+        document.documentElement.dataset.theme = "light";
       } finally {
         setLoading(false);
       }
@@ -62,8 +70,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     load();
   }, []);
 
-  const updateSettings = useCallback(async (partial: Partial<AppSettings>) => {
-    const merged = { ...settings, ...partial };
+  // 跟随系统主题：系统深浅色变化时自动切换
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => {
+      const newTheme: "dark" | "light" = e.matches ? "dark" : "light";
+      document.documentElement.dataset.theme = newTheme;
+      const merged = { ...settingsRef.current, theme: newTheme };
+      setSettings(merged);
+      // 持久化
+      invoke("save_settings_command", { settings: merged }).catch((err) => {
+        console.warn("Failed to persist theme on system change:", err);
+      });
+    };
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  const updateSettings = useCallback(async (partial: Partial<AppSettings>): Promise<boolean> => {
+    const merged = { ...settingsRef.current, ...partial };
     setSettings(merged);
 
     // Apply theme immediately
@@ -74,10 +99,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // Persist to Rust backend
     try {
       await invoke("save_settings_command", { settings: merged });
+      return true;
     } catch (err) {
       console.warn("Failed to save settings:", err);
+      return false;
     }
-  }, [settings]);
+  }, []);
 
   return (
     <SettingsContext.Provider value={{ settings, updateSettings, loading }}>

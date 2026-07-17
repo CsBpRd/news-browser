@@ -25,7 +25,6 @@ function StatsBar({ data, period }: StatsBarProps) {
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
         </svg>
       ),
-      color: "#6366f1",
     },
     {
       label: "年份跨度",
@@ -36,7 +35,6 @@ function StatsBar({ data, period }: StatsBarProps) {
           <path d="M12 6v6l4 2" />
         </svg>
       ),
-      color: "#8b5cf6",
     },
     {
       label: "总大小",
@@ -46,7 +44,6 @@ function StatsBar({ data, period }: StatsBarProps) {
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
         </svg>
       ),
-      color: "#a855f7",
     },
     {
       label: "最新一期",
@@ -59,7 +56,6 @@ function StatsBar({ data, period }: StatsBarProps) {
           <line x1="3" y1="10" x2="21" y2="10" />
         </svg>
       ),
-      color: "#22c55e",
     },
   ];
 
@@ -67,7 +63,7 @@ function StatsBar({ data, period }: StatsBarProps) {
     <div className="stats-bar">
       {stats.map((stat) => (
         <div key={stat.label} className="stat-card">
-          <div className="stat-icon-wrapper" style={{ background: `${stat.color}20`, color: stat.color }}>
+          <div className="stat-icon-wrapper">
             <div className="stat-icon">{stat.icon}</div>
           </div>
           <div className="stat-info">

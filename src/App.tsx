@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { listen } from "@tauri-apps/api/event";
 import { SettingsProvider, useSettings, periodLabel, type AppSettings } from "./settings";
 import Sidebar from "./components/Sidebar";
 import StatsBar from "./components/StatsBar";
@@ -8,6 +9,8 @@ import ReportCard from "./components/ReportCard";
 import ReportViewer from "./components/ReportViewer";
 import ThemeToggle from "./components/ThemeToggle";
 import SettingsModal from "./components/SettingsModal";
+import GenerateConfirmDialog from "./components/GenerateConfirmDialog";
+import GenerateStatus, { type LogEntry } from "./components/GenerateStatus";
 import "./App.css";
 
 export interface ReportInfo {
@@ -42,6 +45,9 @@ function AppContent() {
   const [selectedMonth, setSelectedMonth] = useState<[string, number] | null>(null);
   const [viewingReport, setViewingReport] = useState<ReportInfo | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
+  const [generateStatus, setGenerateStatus] = useState<"idle" | "generating" | "success" | "error">("idle");
+  const [generateLogs, setGenerateLogs] = useState<LogEntry[]>([]);
 
   const plabel = periodLabel(settings.period);
 
@@ -70,6 +76,47 @@ function AppContent() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // 监听流式日志事件
+  useEffect(() => {
+    const unlisten = listen<LogEntry>("ai-log", (event) => {
+      setGenerateLogs(prev => [...prev, event.payload]);
+    });
+    return () => {
+      unlisten.then(fn => fn());
+    };
+  }, []);
+
+  const handleGenerate = async () => {
+    setShowGenerateConfirm(false);
+    setGenerateStatus("generating");
+    setGenerateLogs([]);
+
+    try {
+      const result = await invoke<string>("generate_newspaper");
+
+      setGenerateLogs(prev => [...prev, {
+        type: "output",
+        content: result,
+        timestamp: Date.now(),
+      }]);
+      setGenerateStatus("success");
+
+      await loadData();
+    } catch (err) {
+      setGenerateLogs(prev => [...prev, {
+        type: "error",
+        content: String(err),
+        timestamp: Date.now(),
+      }]);
+      setGenerateStatus("error");
+    }
+  };
+
+  const handleGenerateClose = () => {
+    setGenerateStatus("idle");
+    setGenerateLogs([]);
+  };
 
   // Update window title (HTML + Tauri native)
   useEffect(() => {
@@ -124,8 +171,9 @@ function AppContent() {
             isOpen={showSettings}
             settings={settings}
             onSave={async (s) => {
-              await updateSettings(s);
-              setShowSettings(false);
+              const success = await updateSettings(s);
+              if (success) setShowSettings(false);
+              return success;
             }}
             onClose={() => setShowSettings(false)}
           />
@@ -163,8 +211,9 @@ function AppContent() {
           isOpen={showSettings}
           settings={settings}
           onSave={async (s) => {
-            await updateSettings(s);
-            setShowSettings(false);
+            const success = await updateSettings(s);
+            if (success) setShowSettings(false);
+            return success;
           }}
           onClose={() => setShowSettings(false)}
         />
@@ -187,20 +236,6 @@ function AppContent() {
           <div className="header-top">
             <h1 className="app-title">{settings.app_name}</h1>
             <div className="header-actions">
-              <ThemeToggle
-                theme={settings.theme}
-                onToggle={(theme) => updateSettings({ theme })}
-              />
-              <button
-                className="settings-btn"
-                onClick={() => setShowSettings(true)}
-                title="设置"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="settings-icon">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </button>
               <div className="search-box">
                 <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="8" />
@@ -222,6 +257,41 @@ function AppContent() {
                   </button>
                 )}
               </div>
+              <ThemeToggle
+                theme={settings.theme}
+                onToggle={(theme) => updateSettings({ theme })}
+              />
+              <button
+                className="settings-btn"
+                onClick={() => setShowSettings(true)}
+                title="设置"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="settings-icon">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+              </button>
+              <button
+                className="generate-btn"
+                onClick={() => setShowGenerateConfirm(true)}
+                disabled={generateStatus === "generating"}
+              >
+                {generateStatus === "generating" ? (
+                  <>
+                    <div className="loading-spinner small" />
+                    生成中...
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="generate-icon">
+                      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                      <path d="M2 17l10 5 10-5" />
+                      <path d="M2 12l10 5 10-5" />
+                    </svg>
+                    生成报刊
+                  </>
+                )}
+              </button>
             </div>
           </div>
           {data && <StatsBar data={data} period={settings.period} />}
@@ -283,10 +353,21 @@ function AppContent() {
         isOpen={showSettings}
         settings={settings}
         onSave={async (s) => {
-          await updateSettings(s);
-          setShowSettings(false);
+          const success = await updateSettings(s);
+          if (success) setShowSettings(false);
+          return success;
         }}
         onClose={() => setShowSettings(false)}
+      />
+      <GenerateConfirmDialog
+        isOpen={showGenerateConfirm}
+        onConfirm={handleGenerate}
+        onCancel={() => setShowGenerateConfirm(false)}
+      />
+      <GenerateStatus
+        status={generateStatus}
+        logs={generateLogs}
+        onClose={handleGenerateClose}
       />
     </div>
   );

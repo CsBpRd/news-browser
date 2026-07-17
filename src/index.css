@@ -5,26 +5,25 @@
 }
 
 :root {
-  /* Dark theme (default) */
-  --bg-primary: #0a0a1a;
-  --bg-secondary: #111128;
-  --bg-card: #151530;
-  --bg-card-hover: #1a1a40;
-  --bg-sidebar: #0d0d24;
-  --bg-input: #1a1a38;
+  /* Dark theme - 柔和墨灰，非纯黑 */
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #222222;
+  --bg-card: #242424;
+  --bg-card-hover: #2c2c2c;
+  --bg-sidebar: #161616;
+  --bg-input: #2a2a2a;
   --border-color: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(99, 102, 241, 0.5);
-  --text-primary: #f0f0ff;
-  --text-secondary: #9090b0;
-  --text-muted: #606080;
-  --accent: #6366f1;
-  --accent-light: #818cf8;
-  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
-  --shadow-hover: 0 8px 32px rgba(99, 102, 241, 0.15);
+  --border-active: rgba(255, 255, 255, 0.35);
+  --text-primary: #ededed;
+  --text-secondary: #a8a8a8;
+  --text-muted: #6a6a6a;
+  --accent: #ededed;
+  --accent-text: #1a1a1a;
+  --success: #ededed;
+  --warning: #d4d4d4;
+  --danger: #d4d4d4;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.5);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -32,25 +31,25 @@
 }
 
 :root[data-theme="light"] {
-  --bg-primary: #f5f5fa;
+  /* Light theme - 柔和米白，非纯白 */
+  --bg-primary: #f5f5f3;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f0f0fa;
-  --bg-sidebar: #fafafd;
-  --bg-input: #f0f0f5;
+  --bg-card-hover: #f0efed;
+  --bg-sidebar: #fafaf8;
+  --bg-input: #efeeec;
   --border-color: rgba(0, 0, 0, 0.08);
-  --border-active: rgba(99, 102, 241, 0.6);
-  --text-primary: #1a1a2e;
-  --text-secondary: #505070;
-  --text-muted: #8080a0;
-  --accent: #6366f1;
-  --accent-light: #4f46e5;
-  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #7c3aed 100%);
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
+  --border-active: rgba(0, 0, 0, 0.4);
+  --text-primary: #1a1a1a;
+  --text-secondary: #555555;
+  --text-muted: #8a8a8a;
+  --accent: #1a1a1a;
+  --accent-text: #ffffff;
+  --success: #1a1a1a;
+  --warning: #555555;
+  --danger: #555555;
   --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.06);
-  --shadow-hover: 0 6px 24px rgba(99, 102, 241, 0.12);
+  --shadow-hover: 0 6px 24px rgba(0, 0, 0, 0.08);
 }
 
 html, body, #root {
@@ -87,6 +86,6 @@ body {
 
 /* Selection */
 ::selection {
-  background: rgba(99, 102, 241, 0.4);
+  background: rgba(128, 128, 128, 0.4);
   color: var(--text-primary);
 }

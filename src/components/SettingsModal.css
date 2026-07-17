@@ -29,8 +29,37 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+}
+
+/* Modal Tabs */
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.modal-tab {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: all 0.2s;
+  font-family: inherit;
+  position: relative;
+}
+
+.modal-tab:hover {
+  color: var(--text-primary);
+}
+
+.modal-tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
 }
 
 .modal-header h2 {
@@ -54,8 +83,8 @@
 }
 
 .modal-close-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
 }
 
 .modal-close-btn svg {
@@ -96,16 +125,39 @@
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
-  font-family: inherit;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
 }
 
 .setting-input:focus {
   border-color: var(--border-active);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 0 3px var(--border-color);
 }
 
 .setting-input::placeholder {
   color: var(--text-muted);
+}
+
+/* macOS native select styling */
+.setting-input[type="date"],
+select.setting-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2386868b' d='M6 8.825L1.175 4 2.238 2.938 6 6.7 9.763 2.938 10.825 4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+select.setting-input option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 8px;
+}
+
+select.setting-input:hover {
+  border-color: var(--border-active);
 }
 
 .setting-hint {
@@ -142,12 +194,12 @@
 }
 
 .period-btn:hover {
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--bg-card-hover);
 }
 
 .period-btn.active {
-  background: rgba(99, 102, 241, 0.2);
-  color: var(--accent-light);
+  background: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
 }
 
@@ -212,12 +264,12 @@
 }
 
 .theme-option:hover {
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--bg-card-hover);
 }
 
 .theme-option.active {
-  background: rgba(99, 102, 241, 0.2);
-  color: var(--accent-light);
+  background: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
 }
 
@@ -259,9 +311,9 @@
 }
 
 .modal-btn-save {
-  background: var(--accent-gradient);
-  border: none;
-  color: white;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--accent-text);
 }
 
 .modal-btn-save:hover {
@@ -271,4 +323,71 @@
 .modal-btn-save:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.setting-textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.modal-btn-reset {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.modal-btn-reset:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.ai-config-tab,
+.prompt-template-tab,
+.search-config-tab {
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-message {
+  color: var(--error-color);
+  background: var(--error-bg);
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+.save-message {
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-right: auto;
+}
+
+.save-message.success {
+  color: var(--text-primary);
+  background: var(--bg-input);
+}
+
+.save-message.error {
+  color: var(--text-primary);
+  background: var(--bg-input);
 }

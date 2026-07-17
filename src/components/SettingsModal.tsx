@@ -1,22 +1,29 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { AppSettings, Period } from "../settings";
+import AIConfigTab from "./AIConfigTab";
+import PromptTemplateTab from "./PromptTemplateTab";
+import SearchConfigTab from "./SearchConfigTab";
 import "./SettingsModal.css";
 
 interface SettingsModalProps {
   isOpen: boolean;
   settings: AppSettings;
-  onSave: (settings: Partial<AppSettings>) => Promise<void>;
+  onSave: (settings: Partial<AppSettings>) => Promise<boolean>;
   onClose: () => void;
 }
 
+type TabKey = "basic" | "ai" | "template" | "search";
+
 function SettingsModal({ isOpen, settings, onSave, onClose }: SettingsModalProps) {
+  const [activeTab, setActiveTab] = useState<TabKey>("basic");
   const [appName, setAppName] = useState(settings.app_name);
   const [period, setPeriod] = useState<Period>(settings.period);
   const [workDir, setWorkDir] = useState(settings.work_dir);
   const [filePattern, setFilePattern] = useState(settings.file_pattern);
   const [theme, setTheme] = useState<"dark" | "light">(settings.theme);
   const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -26,6 +33,8 @@ function SettingsModal({ isOpen, settings, onSave, onClose }: SettingsModalProps
       setWorkDir(settings.work_dir);
       setFilePattern(settings.file_pattern);
       setTheme(settings.theme);
+      setActiveTab("basic");
+      setSaveMessage(null);
     }
   }, [isOpen, settings]);
 
@@ -55,14 +64,23 @@ function SettingsModal({ isOpen, settings, onSave, onClose }: SettingsModalProps
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveMessage(null);
     try {
-      await onSave({
+      const success = await onSave({
         app_name: appName,
         period,
         work_dir: workDir,
         file_pattern: filePattern,
         theme,
       });
+      if (success) {
+        setSaveMessage({ type: "success", text: "设置已保存" });
+        setTimeout(() => setSaveMessage(null), 2000);
+      } else {
+        setSaveMessage({ type: "error", text: "保存失败" });
+      }
+    } catch (err) {
+      setSaveMessage({ type: "error", text: `保存失败: ${err}` });
     } finally {
       setSaving(false);
     }
@@ -72,6 +90,13 @@ function SettingsModal({ isOpen, settings, onSave, onClose }: SettingsModalProps
     { key: "daily", label: "日报" },
     { key: "weekly", label: "周报" },
     { key: "monthly", label: "月报" },
+  ];
+
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: "basic", label: "基本设置" },
+    { key: "ai", label: "AI配置" },
+    { key: "template", label: "提示词模板" },
+    { key: "search", label: "搜索配置" },
   ];
 
   return (
@@ -87,7 +112,21 @@ function SettingsModal({ isOpen, settings, onSave, onClose }: SettingsModalProps
           </button>
         </div>
 
+        <div className="modal-tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              className={`modal-tab ${activeTab === tab.key ? "active" : ""}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="modal-body">
+          {activeTab === "basic" && (
+            <>
           {/* App Name */}
           <div className="setting-group">
             <label className="setting-label">App 名称</label>
@@ -184,20 +223,38 @@ function SettingsModal({ isOpen, settings, onSave, onClose }: SettingsModalProps
               </button>
             </div>
           </div>
-        </div>
+          </>
+          )}
+          {activeTab === "ai" && (
+            <AIConfigTab />
+          )}
+          {activeTab === "template" && (
+            <PromptTemplateTab />
+          )}
+          {activeTab === "search" && (
+            <SearchConfigTab />
+          )}
+          </div>
 
-        <div className="modal-footer">
-          <button className="modal-btn modal-btn-cancel" onClick={onClose}>
-            取消
-          </button>
-          <button
-            className="modal-btn modal-btn-save"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "保存中..." : "保存设置"}
-          </button>
-        </div>
+        {activeTab === "basic" && (
+          <div className="modal-footer">
+            {saveMessage && (
+              <span className={`save-message ${saveMessage.type}`}>
+                {saveMessage.text}
+              </span>
+            )}
+            <button className="modal-btn modal-btn-cancel" onClick={onClose}>
+              取消
+            </button>
+            <button
+              className="modal-btn modal-btn-save"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "保存中..." : "保存设置"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

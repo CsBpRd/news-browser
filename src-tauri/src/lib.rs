@@ -1,3 +1,9 @@
+pub mod ai_config;
+pub mod agent;
+mod config;
+mod prompt_template;
+mod search_config;
+mod search_tools;
 mod settings;
 
 use regex::Regex;
@@ -333,6 +339,10 @@ async fn pick_work_dir(app: tauri::AppHandle) -> Result<Option<String>, String> 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // 启动时自动升级历史配置：将过小的 max_tokens 提升到 16000
+    // 修复早期版本默认 4000 导致 HTML 报告被截断的问题
+    upgrade_legacy_ai_config();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
@@ -343,6 +353,14 @@ pub fn run() {
             pick_work_dir,
             settings::get_settings,
             settings::save_settings_command,
+            ai_config::get_ai_config,
+            ai_config::save_ai_config,
+            prompt_template::get_prompt_template,
+            prompt_template::save_prompt_template,
+            agent::generate_newspaper,
+            search_config::get_search_config,
+            search_config::save_search_config,
+            search_tools::search_web_command,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {
@@ -356,6 +374,20 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// 启动时升级历史 ai-config：将 max_tokens < 16000 提升到 16000
+/// 静默失败，不影响 app 启动
+fn upgrade_legacy_ai_config() {
+    let mut config = ai_config::get_ai_config();
+    if config.max_tokens > 0 && config.max_tokens < 16000 {
+        config.max_tokens = 16000;
+        if let Err(e) = ai_config::save_ai_config(config) {
+            log::warn!("升级 ai-config max_tokens 失败: {}", e);
+        } else {
+            log::info!("已自动升级 ai-config max_tokens 到 16000");
+        }
+    }
 }
 
 #[cfg(test)]
